@@ -118,24 +118,31 @@ vector<DNA> getSuperiors(vector<DNA> gen){
 	return superiors;
 }
 
+int selectCandidate(int full, int missrate){
+	int bound = full - missrate;
+	if(bound-1 <= 0) return 0;
+	bound = rand()%(bound-1)+1;
+	int num, limit = 100;
+	do {
+		num = rand()%full;
+	} while(num > bound && limit-- > 0);
+	return num;
+}
+
 vector<DNA> changeGeneration(vector<DNA> prev){
-	// 우성 유전자들을 교배/변이시킨 것들로 실험군을 다시 채운다.
+	// 실험군을 다시 채운다.
 	int goalSize = prev.size();
-	vector<DNA> superiors = getSuperiors(prev);
-	while(superiors.size() < goalSize){
-		int curSize = superiors.size();
-		for(int i=0; i<curSize; ++i){
-			for(int j=curSize-1; j>i; ++j){
-				DNA lChild = superiors[i].mating(superiors[j]);
-				DNA rChild = superiors[j].mating(superiors[i]);
-				superiors.push_back(lChild);
-				if(superiors.size() >= goalSize) return superiors;
-				superiors.push_back(rChild);
-				if(superiors.size() >= goalSize) return superiors;
-			}
+	vector<DNA> next;
+	while(next.size() < goalSize){
+		for(int i=0; i<goalSize; ++i){
+			int cand1 = selectCandidate(goalSize, i);
+			int cand2 = selectCandidate(goalSize, i);
+			DNA child = prev[cand1].mating(prev[cand2]);
+			next.push_back(child);
+			if(next.size() >= goalSize) break;
 		}
 	}
-	return superiors;
+	return next;
 }
 
 int main(){
@@ -154,6 +161,7 @@ int main(){
 			dna.solve(answer);
 			printf("%s(%d)\n", dna.getGene().c_str(), dna.getTryCount());
 		}
+		puts("+-------------------------------------------------------+");
 		
 		// 세대 교체 작업
 		generation = changeGeneration(generation);
