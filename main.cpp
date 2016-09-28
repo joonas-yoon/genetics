@@ -5,6 +5,7 @@ using namespace std;
 #define GENE_SIZE   10
 #define MAX_NUMBER  100000
 #define MUTATE_RATE 100
+#define LAST_GENERATION 100
 
 #define printRange(l, r, g) printf("[%6d, %6d](%5d) ", l, r, g);
 
@@ -232,7 +233,7 @@ int main(){
 	vector<DNA> generation(totalGeneCount);
 	
 	int nthGeneration = 0;
-	while(++nthGeneration < 300){
+	while(++nthGeneration < LAST_GENERATION){
 		int answer = generateNumber(MAX_NUMBER);
 	
 		for(auto& dna : generation){

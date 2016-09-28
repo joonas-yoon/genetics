@@ -16,6 +16,22 @@
 
 Binary search는 매번 절반을 쪼개 확인하므로, 이 프로그램의 염색체로 표현하자면 `555555...`와 같다. 따라서, 이번 연구의 목표는 `55555....`로 최종진화하는 것이다.
 
+#### Testcases
+
+- 1-1.out ~ 1-5.out:
+```
+population of generation: 200
+length of gene: 10
+range of answer: 1 ~ 100000
+incidence of mutation: 1/100 (1.00%)
+worst count of this game: 17
+
+제 100세대까지의 진화를 확인했다.
+```
+유전자 정보가 안정되지 않는다. 돌연변이 발생률을 낮추거나, 500세대까지 진화를 지켜보거나 해야겠다.
+
+
+
 #### Compile option
 
 ```
