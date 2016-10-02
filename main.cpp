@@ -3,9 +3,9 @@ using namespace std;
 
 #define POPULATION  200
 #define GENE_SIZE   10
-#define MAX_NUMBER  100000
-#define MUTATE_RATE 100
-#define LAST_GENERATION 100
+#define MAX_NUMBER  1000000
+#define MUTATE_RATE 200
+#define LAST_GENERATION 200
 
 #define printRange(l, r, g) printf("[%6d, %6d](%5d) ", l, r, g);
 
@@ -70,13 +70,10 @@ public:
 	}
 
 	// 문제를 풀어본다. 몇 번만에 해결할까
-	int solve(const int& answer, bool print = false){
+	int solve(const int& answer){
 		int lower=1, upper=MAX_NUMBER, tries=0;
 		while(lower <= upper){
 			int guess = guessNumber(lower, upper, tries++);
-			
-			if(print) printRange(lower, upper, guess);
-			
 			if(guess == answer) break;
 			else if(guess < answer){
 				lower = guess + 1;
@@ -108,7 +105,6 @@ private:
 	int guessNumber(int lowest, int highest, int tries){
 		int width = highest - lowest;
 		double percent = getGeneOnPos(tries) * 0.1; // 1 to 0.1 (10%)
-		// printf("%d + (%d - %d) * %.1lf\n", lowest, highest, lowest, percent);
 		return lowest + (int)(width * percent);
 	}
 	int getGeneOnPos(int pos){
@@ -120,13 +116,12 @@ private:
 	
 
 	DNA mate(const DNA& opponent){
-		// 간단한 구현을 위해 일점 교차를 사용
+		// 간단한 구현을 위해 2점 교차를 사용
 		string oppn = opponent.gene;
 		
 		int len = oppn.length();
-		for(int i=0; i<len; ++i){
-			if( i%2 ) this->gene[i] = oppn[i];
-		}
+		int p1 = rand()%len, p2 = rand()%(len-p1+1)+p1;
+		for(int i=p1; i<p2; ++i) this->gene[i] = oppn[i];
 		return *this;
 	}
 	
@@ -217,12 +212,32 @@ int countWithBinarySearch(const int& n){
 		int mid = (l+r)/2;
 		if(mid > n) r = mid-1;
 		else l = mid+1;
-		
-		printRange(l, r, mid);
 		count++;
 	}
-	puts("");
 	return count;
+}
+
+void test(DNA& dna){
+	int dnaWin = 0, bsWin = 0, draw = 0;
+	long long dnaSolveSum = 0, bsSolveSum = 0;
+	for(int number=0; number <= MAX_NUMBER; ++number){
+		int dnaSolve = dna.solve(number);
+		int bsSolve = countWithBinarySearch(number);
+		
+		dnaSolveSum += dnaSolve;
+		bsSolveSum += bsSolve;
+		
+		dnaWin += dnaSolve < bsSolve;
+		draw += dnaSolve == bsSolve;
+		bsWin += dnaSolve > bsSolve;
+	}
+	int total = dnaWin + bsWin; // except draw
+	printf("dna : bs = %d : %d = %.2lf%% : %.2lf%%\n", dnaWin, bsWin, (dnaWin+1e-9)/total*100, (bsWin+1e-9)/total*100);
+	
+	double dnaSolveAverage = (dnaSolveSum+1e-9)/(MAX_NUMBER+1);
+	double bsSolveAverage = (bsSolveSum+1e-9)/(MAX_NUMBER+1);
+	printf("average count by dna : %.2lf\n", dnaSolveAverage);
+	printf("average count by binary search : %.2lf\n", bsSolveAverage);
 }
 
 int main(){
@@ -251,19 +266,7 @@ int main(){
 		changeGeneration(generation);
 	}
 	
-	// 3번 정도 테스트
-	for(int i=0; i<3; ++i){
-		int newAnswer = generateNumber(MAX_NUMBER);
-		printf("\n\nguess %d:\n", newAnswer);
-		
-		// 진화가 끝난 유전자로 문제를 해결해보기
-		DNA lastChild = generation.front();
-		lastChild.solve(newAnswer, true);
-		puts("");
-		
-		// 바이너리 서치로 찾아보기
-		countWithBinarySearch(newAnswer);
-	}
+	test(generation.front());
 	
 	return 0;
 }
