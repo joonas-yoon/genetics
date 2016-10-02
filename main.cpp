@@ -202,8 +202,7 @@ void printProgramInfo(){
 	int worstCount = 0;
 	for(int i=1; i<MAX_NUMBER; i*=2) worstCount += 1;
 	printf("worst count of this game: %d\n", worstCount);
-	
-	puts("\n");
+	printf("제 %d세대까지의 진화를 확인했다.\n\n", LAST_GENERATION);
 }
 
 int countWithBinarySearch(const int& n){
@@ -217,7 +216,7 @@ int countWithBinarySearch(const int& n){
 	return count;
 }
 
-void test(DNA& dna){
+double test(DNA& dna){
 	int dnaWin = 0, bsWin = 0, draw = 0;
 	long long dnaSolveSum = 0, bsSolveSum = 0;
 	for(int number=0; number <= MAX_NUMBER; ++number){
@@ -232,41 +231,63 @@ void test(DNA& dna){
 		bsWin += dnaSolve > bsSolve;
 	}
 	int total = dnaWin + bsWin; // except draw
-	printf("dna : bs = %d : %d = %.2lf%% : %.2lf%%\n", dnaWin, bsWin, (dnaWin+1e-9)/total*100, (bsWin+1e-9)/total*100);
+	// printf("dna : bs = %d : %d = %.2lf%% : %.2lf%%\n", dnaWin, bsWin, (dnaWin+1e-9)/total*100, (bsWin+1e-9)/total*100);
 	
 	double dnaSolveAverage = (dnaSolveSum+1e-9)/(MAX_NUMBER+1);
 	double bsSolveAverage = (bsSolveSum+1e-9)/(MAX_NUMBER+1);
-	printf("average count by dna : %.2lf\n", dnaSolveAverage);
-	printf("average count by binary search : %.2lf\n", bsSolveAverage);
+	// printf("average count by dna : %.2lf\n", dnaSolveAverage);
+	// printf("average count by binary search : %.2lf\n", bsSolveAverage);
+	
+	return (1.0 - dnaSolveAverage / bsSolveAverage) * 100.0;
 }
 
 int main(){
-	randomSeed();
 	printProgramInfo();
 	
-	int totalGeneCount = POPULATION;
-	vector<DNA> generation(totalGeneCount);
-	
-	int nthGeneration = 0;
-	while(++nthGeneration < LAST_GENERATION){
-		int answer = generateNumber(MAX_NUMBER);
-	
-		for(auto& dna : generation){
-			// 첫번째 세대만 랜덤 유전자로 태어난다.
-			if(nthGeneration == 1) dna.makeRandomDNA();
-			dna.solve(answer);
+	int testCases = 100;
+	double fastest = -987654, slowest = 987654;
+	double howFasterSum = 0;
+	for(int tcase=0; tcase < testCases; ++tcase)
+	{
+		randomSeed(tcase);
+		
+		int totalGeneCount = POPULATION;
+		vector<DNA> generation(totalGeneCount);
+		
+		int nthGeneration = 0;
+		while(++nthGeneration < LAST_GENERATION){
+			int answer = generateNumber(MAX_NUMBER);
+		
+			for(auto& dna : generation){
+				// 첫번째 세대만 랜덤 유전자로 태어난다.
+				if(nthGeneration == 1) dna.makeRandomDNA();
+				dna.solve(answer);
+			}
+			
+			/*
+			for(auto& d : getSuperiors(generation)){
+				printf("%10s(%2d) ", d.getGene().c_str(), d.getTryCount());
+			}
+			puts("");
+			*/
+			
+			// 세대 교체 작업
+			changeGeneration(generation);
 		}
 		
-		for(auto& d : getSuperiors(generation)){
-			printf("%10s(%2d) ", d.getGene().c_str(), d.getTryCount());
-		}
-		puts("");
+		double howFasterThanBinarySearch = test(generation.front());
+		fastest = max(fastest, howFasterThanBinarySearch);
+		slowest = min(slowest, howFasterThanBinarySearch);
+		howFasterSum += howFasterThanBinarySearch;
 		
-		// 세대 교체 작업
-		changeGeneration(generation);
+		auto& finalDNA = generation.front();
+		printf("%10s(%2d) : %.2lf\n", finalDNA.getGene().c_str(), finalDNA.getTryCount(), howFasterThanBinarySearch);
 	}
+	puts("");
 	
-	test(generation.front());
+	double howFasterAveragely = (howFasterSum+1e-9)/testCases;
+	printf("On averagely, my dna is faster %.2lf%% than binary search on %d testcases\n", howFasterAveragely, testCases);
+	printf("Fastest: %.2lf%% , Slowest: %.2lf%%\n", fastest, slowest);
 	
 	return 0;
 }
